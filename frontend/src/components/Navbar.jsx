@@ -16,6 +16,9 @@ const Navbar = () => {
       <div>
         {user ? (
           <>
+            {user.role === 'admin' && (
+              <Link to="/admin/add-movie" className="mr-4">Add Movie</Link>
+            )}
             <span className="mr-4">Hi, {user.name}</span>
             <button
               onClick={handleLogout}
