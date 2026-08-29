@@ -3,6 +3,7 @@ import Navbar from './components/Navbar';
 import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
+import AddMovie from './pages/AddMovie';
 
 function App() {
   return (
@@ -12,6 +13,7 @@ function App() {
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
+        <Route path="/admin/add-movie" element={<AddMovie />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
