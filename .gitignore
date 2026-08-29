@@ -37,6 +37,10 @@ bower_components
 # Compiled binary addons (https://nodejs.org/api/addons.html)
 build/Release
 
+# CRA production build output (this repo's generic Node .gitignore template
+# didn't already cover it - only build/Release for native addons)
+/frontend/build
+
 # Dependency directories
 node_modules/
 jspm_packages/
