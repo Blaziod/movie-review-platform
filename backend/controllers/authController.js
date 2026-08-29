@@ -30,6 +30,15 @@ const registerUser = async (req, res) => {
       token: generateToken(user.id),
     });
   } catch (error) {
+    // Self-review fix: findOne + create isn't atomic, so a duplicate email
+    // submitted twice in quick succession can both pass the findOne check
+    // and race to create(). The schema's unique index then rejects the
+    // second insert with a raw Mongo duplicate-key error (E11000) - catch
+    // that specifically and return the same clean message as the findOne
+    // check above, instead of a confusing 500.
+    if (error.code === 11000) {
+      return res.status(400).json({ message: 'Email already in use' });
+    }
     res.status(500).json({ message: error.message });
   }
 };

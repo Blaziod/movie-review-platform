@@ -72,4 +72,29 @@ describe('AuthController - registerUser', () => {
 
     expect(res.status.calledWith(400)).to.be.true;
   });
+
+  // Self-review: findOne + create is not atomic, so two near-simultaneous
+  // registrations for the same email can both pass the findOne check and
+  // race to create(). The unique index then rejects the second insert with
+  // a Mongo duplicate-key error (E11000) - this should surface as the same
+  // clean 400 message, not a raw 500.
+  it('should return 400 (not 500) when create() fails with a duplicate-key error', async () => {
+    const req = {
+      body: { name: 'Jane Reviewer', email: 'jane@example.com', password: 'password123' },
+    };
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+    };
+
+    sinon.stub(User, 'findOne').resolves(null);
+    const duplicateKeyError = new Error('E11000 duplicate key error');
+    duplicateKeyError.code = 11000;
+    sinon.stub(User, 'create').rejects(duplicateKeyError);
+
+    await registerUser(req, res);
+
+    expect(res.status.calledWith(400)).to.be.true;
+    expect(res.json.calledWithMatch({ message: 'Email already in use' })).to.be.true;
+  });
 });
