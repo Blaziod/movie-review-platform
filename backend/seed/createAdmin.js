@@ -19,20 +19,29 @@ if (!name || !email || !password) {
 }
 
 (async () => {
-  await connectDB();
+  try {
+    await connectDB();
 
-  let user = await User.findOne({ email });
-  if (user) {
-    user.name = name;
-    user.password = password; 
-    user.role = 'admin';
-    await user.save();
-    console.log(`Promoted existing user ${email} to admin.`);
-  } else {
-    user = await User.create({ name, email, password, role: 'admin' });
-    console.log(`Created new admin account ${email}.`);
+    let user = await User.findOne({ email });
+    if (user) {
+      user.name = name;
+      user.password = password;
+      user.role = 'admin';
+      await user.save();
+      console.log(`Promoted existing user ${email} to admin.`);
+    } else {
+      user = await User.create({ name, email, password, role: 'admin' });
+      console.log(`Created new admin account ${email}.`);
+    }
+
+    await mongoose.disconnect();
+    process.exit(0);
+  } catch (error) {
+    // Self-review fix: previously an error here (e.g. a Mongoose
+    // validation failure from a malformed email) crashed with a raw,
+    // unhandled-promise-rejection stack trace instead of a clean message.
+    console.error(`Failed to create/promote admin: ${error.message}`);
+    await mongoose.disconnect().catch(() => {});
+    process.exit(1);
   }
-
-  await mongoose.disconnect();
-  process.exit(0);
 })();
