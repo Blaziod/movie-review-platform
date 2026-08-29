@@ -1,8 +1,9 @@
 const chai = require('chai');
 const sinon = require('sinon');
 const jwt = require('jsonwebtoken');
+const bcrypt = require('bcrypt');
 const User = require('../models/User');
-const { registerUser } = require('../controllers/authController');
+const { registerUser, loginUser } = require('../controllers/authController');
 const { expect } = chai;
 
 //As a visitor, I want to register as a Reviewer, so that I can submit reviews.
@@ -96,5 +97,78 @@ describe('AuthController - registerUser', () => {
 
     expect(res.status.calledWith(400)).to.be.true;
     expect(res.json.calledWithMatch({ message: 'Email already in use' })).to.be.true;
+  });
+});
+
+// As a registered user, I want to log in, so I reach my role's dashboard.
+describe('AuthController - loginUser', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it('should log in with correct credentials and return a token', async () => {
+    const req = { body: { email: 'jane@example.com', password: 'password123' } };
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+    };
+
+    sinon.stub(User, 'findOne').resolves({
+      id: 'abc123',
+      name: 'Jane Reviewer',
+      email: 'jane@example.com',
+      role: 'reviewer',
+      password: 'hashed-password',
+    });
+    sinon.stub(bcrypt, 'compare').resolves(true);
+    sinon.stub(jwt, 'sign').returns('fake-jwt-token');
+
+    await loginUser(req, res);
+
+    expect(res.json.calledWithMatch({ role: 'reviewer', token: 'fake-jwt-token' })).to.be.true;
+    expect(res.status.called).to.be.false; 
+  });
+
+  it('should return 401 for a wrong password', async () => {
+    const req = { body: { email: 'jane@example.com', password: 'wrongpassword' } };
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+    };
+
+    sinon.stub(User, 'findOne').resolves({ email: 'jane@example.com', password: 'hashed-password' });
+    sinon.stub(bcrypt, 'compare').resolves(false);
+
+    await loginUser(req, res);
+
+    expect(res.status.calledWith(401)).to.be.true;
+    expect(res.json.calledWithMatch({ message: 'Invalid email or password' })).to.be.true;
+  });
+
+  it('should return 401 (same message) for an email that does not exist', async () => {
+    const req = { body: { email: 'nobody@example.com', password: 'password123' } };
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+    };
+
+    sinon.stub(User, 'findOne').resolves(null);
+
+    await loginUser(req, res);
+
+    expect(res.status.calledWith(401)).to.be.true;
+    expect(res.json.calledWithMatch({ message: 'Invalid email or password' })).to.be.true;
+  });
+
+  it('should return 400 when email or password is missing', async () => {
+    const req = { body: { email: 'jane@example.com' } };
+    const res = {
+      status: sinon.stub().returnsThis(),
+      json: sinon.spy(),
+    };
+
+    await loginUser(req, res);
+
+    expect(res.status.calledWith(400)).to.be.true;
   });
 });
