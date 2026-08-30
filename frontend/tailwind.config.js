@@ -3,19 +3,19 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        bg: '#0A0A0B',
+        bg: '#080808',
         surface: '#17171A',
         'surface-light': '#232326',
         input: '#2A2A2D',
         border: '#2E2E32',
         brand: {
-          orange: '#F0A63E',
-          'orange-dark': '#D98F2B',
+          orange: '#FFA500',
+          'orange-dark': '#E69500',
           blue: '#3C5A82',
         },
-        success: { DEFAULT: '#22C55E', bg: '#123822' },
-        danger: { DEFAULT: '#EF4444', bg: '#3A1418' },
-        warning: { DEFAULT: '#D9A441', bg: '#3A2A12' },
+        success: { DEFAULT: '#22C55E', bg: '#16782E' },
+        danger: { DEFAULT: '#EF4444', bg: '#7C150F' },
+        warning: { DEFAULT: '#D9A441', bg: '#784A16' },
       },
       borderRadius: {
         pill: '9999px',

@@ -4,6 +4,7 @@ import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
 import StarRating from '../components/StarRating';
 import Button from '../components/Button';
+import Footer from '../components/Footer';
 
 // US4.1 - As a moderator, I want a queue of pending reviews with
 // reviewer/movie context, so I can assess them efficiently.
@@ -108,7 +109,7 @@ const ModerationQueue = () => {
 
       {rejecting && (
         <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
-          <div className="bg-surface p-6 rounded-2xl max-w-sm w-full">
+          <div className="bg-[#1D1D1D] p-6 rounded-2xl max-w-sm w-full">
             <h2 className="font-bold text-white mb-1">Reject Review</h2>
             <p className="text-xs text-gray-400 mb-2">Reason (min 10 characters, shown to Reviewer)</p>
             <textarea
@@ -130,6 +131,8 @@ const ModerationQueue = () => {
           </div>
         </div>
       )}
+
+      <Footer />
     </div>
   );
 };

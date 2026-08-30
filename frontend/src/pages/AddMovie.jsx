@@ -12,7 +12,14 @@ const CURRENT_YEAR = new Date().getFullYear();
 const AddMovie = () => {
   const { user } = useAuth();
   const navigate = useNavigate();
-  const [formData, setFormData] = useState({ title: '', year: '', genre: '', synopsis: '' });
+  const [formData, setFormData] = useState({
+    title: '',
+    year: '',
+    genre: '',
+    synopsis: '',
+    imageUrl: '',
+    duration: '',
+  });
   const [errors, setErrors] = useState({});
   const [success, setSuccess] = useState(false);
 
@@ -40,7 +47,7 @@ const AddMovie = () => {
         { headers: { Authorization: `Bearer ${user?.token}` } }
       );
       setSuccess(true);
-      setFormData({ title: '', year: '', genre: '', synopsis: '' });
+      setFormData({ title: '', year: '', genre: '', synopsis: '', imageUrl: '', duration: '' });
       setErrors({});
     } catch (error) {
       setErrors({ form: error.response?.data?.message || 'Failed to add movie.' });
@@ -81,6 +88,7 @@ const AddMovie = () => {
             value={formData.title}
             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
             error={errors.title}
+             className="px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
           />
           {errors.title && <p className="text-xs text-danger mt-1 pl-2">{errors.title}</p>}
         </div>
@@ -92,6 +100,7 @@ const AddMovie = () => {
             value={formData.year}
             onChange={(e) => setFormData({ ...formData, year: e.target.value })}
             error={errors.year}
+             className="px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
           />
           {errors.year && <p className="text-xs text-danger mt-1 pl-2">{errors.year}</p>}
         </div>
@@ -103,6 +112,7 @@ const AddMovie = () => {
             value={formData.genre}
             onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
             error={errors.genre}
+             className="px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
           />
           {errors.genre && <p className="text-xs text-danger mt-1 pl-2">{errors.genre}</p>}
         </div>
@@ -111,9 +121,29 @@ const AddMovie = () => {
           placeholder="Synopsis"
           value={formData.synopsis}
           onChange={(e) => setFormData({ ...formData, synopsis: e.target.value })}
-          className="w-full mb-4 px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
+          className="w-full mb-2 px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
           rows={3}
         />
+
+        <div className="space-y-1 mb-2">
+          <Input
+            type="text"
+            placeholder="Poster Image URL (optional)"
+            value={formData.imageUrl}
+            onChange={(e) => setFormData({ ...formData, imageUrl: e.target.value })}
+             className="px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
+          />
+        </div>
+
+        <div className="space-y-1 mb-4">
+          <Input
+            type="text"
+            placeholder="Duration (optional, e.g. 2h 34m)"
+            value={formData.duration}
+            onChange={(e) => setFormData({ ...formData, duration: e.target.value })}
+            className="px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
+          />
+        </div>
 
         <Button type="submit" className="w-full">
           Submit

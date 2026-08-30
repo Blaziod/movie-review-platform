@@ -1,7 +1,7 @@
 const STYLES = {
-  Pending: 'bg-warning-bg text-warning',
-  Approved: 'bg-success-bg text-success',
-  Rejected: 'bg-danger-bg text-danger',
+  Pending: 'bg-warning-bg text-[#FAFAFAB2]',
+  Approved: 'bg-success-bg text-[#FAFAFAB2]',
+  Rejected: 'bg-danger-bg text-[#FAFAFAB2]',
 };
 
 const StatusBadge = ({ status }) => (

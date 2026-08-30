@@ -19,14 +19,11 @@ const Dashboard = () => {
           </Link>
         </div>
       ) : (
-        <>
-          <p className="text-sm text-gray-500 mt-4 mb-4">
-            Full movie catalog browsing lands here (MRP-45).
-          </p>
-          <Link to="/write-review">
-            <Button variant="primary">Write a Review</Button>
+        <div className="mt-4">
+          <Link to="/">
+            <Button variant="primary">Browse Movies</Button>
           </Link>
-        </>
+        </div>
       )}
     </div>
   );

@@ -1,8 +1,8 @@
 const chai = require('chai');
 const sinon = require('sinon');
-const mongoose = require('mongoose');
 const Movie = require('../models/Movie');
-const { addMovie, updateMovie, deleteMovie } = require('../controllers/movieController');
+const Review = require('../models/Review');
+const { addMovie, getMovies, getMovieById, updateMovie, deleteMovie } = require('../controllers/movieController');
 const { expect } = chai;
 
 // US2.1 - As an admin, I want to add a movie (title, year, genre, synopsis),
@@ -133,9 +133,7 @@ describe('MovieController - deleteMovie', () => {
   });
 
   const stubApprovedReviewCount = (count) => {
-    sinon.stub(mongoose.connection, 'collection').returns({
-      countDocuments: sinon.stub().resolves(count),
-    });
+    sinon.stub(Review, 'countDocuments').resolves(count);
   };
 
   it('should delete immediately when the movie has no approved reviews', async () => {
@@ -153,7 +151,6 @@ describe('MovieController - deleteMovie', () => {
   });
 
   // AC: a movie with approved reviews requires explicit confirmation
-  // (Decision #4 - soft-restrict rather than cascade-delete).
   it('should return 409 (not delete) when approved reviews exist and confirm is not set', async () => {
     const movieDoc = { _id: 'movie123', deleteOne: sinon.stub().resolves() };
     sinon.stub(Movie, 'findById').resolves(movieDoc);
@@ -189,6 +186,113 @@ describe('MovieController - deleteMovie', () => {
     const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
 
     await deleteMovie(req, res);
+
+    expect(res.status.calledWith(404)).to.be.true;
+  });
+});
+
+// US5.1 - As any visitor, I want to browse/search the catalog by title or
+// genre. Public - no auth required.
+describe('MovieController - getMovies', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  const makeQuery = (result) => {
+    const query = {};
+    query.sort = sinon.stub().returns(query);
+    query.then = (resolve) => resolve(result);
+    return query;
+  };
+
+  it('should filter by title (case-insensitive)', async () => {
+    const query = makeQuery([{ title: 'Inception' }]);
+    sinon.stub(Movie, 'find').returns(query);
+
+    const req = { query: { title: 'incep' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovies(req, res);
+
+    expect(Movie.find.calledWith({ title: { $regex: 'incep', $options: 'i' } })).to.be.true;
+    expect(res.json.calledWith([{ title: 'Inception' }])).to.be.true;
+  });
+
+  it('should filter by genre', async () => {
+    const query = makeQuery([]);
+    sinon.stub(Movie, 'find').returns(query);
+
+    const req = { query: { genre: 'Drama' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovies(req, res);
+
+    expect(Movie.find.calledWith({ genre: { $regex: 'Drama', $options: 'i' } })).to.be.true;
+  });
+
+  it('should return all movies when no filters are given', async () => {
+    const query = makeQuery([{ title: 'A' }, { title: 'B' }]);
+    sinon.stub(Movie, 'find').returns(query);
+
+    const req = { query: {} };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovies(req, res);
+
+    expect(Movie.find.calledWith({})).to.be.true;
+  });
+});
+
+// US5.2 - As any visitor, I want to see a movie's average rating and its
+// approved reviews. Public - no auth required.
+describe('MovieController - getMovieById', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  const makeReviewQuery = (result) => {
+    const query = {};
+    query.sort = sinon.stub().returns(query);
+    query.populate = sinon.stub().returns(query);
+    query.then = (resolve) => resolve(result);
+    return query;
+  };
+
+  it('should return the movie plus only its Approved reviews', async () => {
+    const movieDoc = { _id: 'movie123', title: 'Inception', avgRating: 4.5 };
+    sinon.stub(Movie, 'findById').resolves(movieDoc);
+    const reviewQuery = makeReviewQuery([{ rating: 5, status: 'Approved' }]);
+    sinon.stub(Review, 'find').returns(reviewQuery);
+
+    const req = { params: { id: 'movie123' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovieById(req, res);
+
+    expect(Review.find.calledWith({ movieId: 'movie123', status: 'Approved' })).to.be.true;
+    expect(res.json.calledWithMatch({ movie: movieDoc, reviews: [{ rating: 5, status: 'Approved' }] })).to.be
+      .true;
+  });
+
+  it('should return an empty reviews array when the movie has no approved reviews', async () => {
+    sinon.stub(Movie, 'findById').resolves({ _id: 'movie123', avgRating: 0 });
+    sinon.stub(Review, 'find').returns(makeReviewQuery([]));
+
+    const req = { params: { id: 'movie123' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovieById(req, res);
+
+    expect(res.json.calledWithMatch({ reviews: [] })).to.be.true;
+  });
+
+  it('should return 404 when the movie does not exist', async () => {
+    sinon.stub(Movie, 'findById').resolves(null);
+
+    const req = { params: { id: 'missing' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMovieById(req, res);
 
     expect(res.status.calledWith(404)).to.be.true;
   });

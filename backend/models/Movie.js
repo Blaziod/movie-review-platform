@@ -6,6 +6,8 @@ const movieSchema = new mongoose.Schema(
     year: { type: Number, required: true },
     genre: { type: String, required: true },
     synopsis: { type: String, default: '' },
+    imageUrl: { type: String, default: '' },
+    duration: { type: String, default: '' },
     avgRating: { type: Number, default: 0 },
     reviewCount: { type: Number, default: 0 },
   },
