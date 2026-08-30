@@ -2,7 +2,13 @@ const chai = require('chai');
 const sinon = require('sinon');
 const Review = require('../models/Review');
 const Movie = require('../models/Movie');
-const { submitReview, updateReview, withdrawReview } = require('../controllers/reviewController');
+const {
+  submitReview,
+  updateReview,
+  withdrawReview,
+  getPendingReviews,
+  moderateReview,
+} = require('../controllers/reviewController');
 const { expect } = chai;
 
 // US3.1 - As a reviewer, I want to submit a rating (1-5) + review text for a
@@ -245,5 +251,124 @@ describe('ReviewController - withdrawReview', () => {
     await withdrawReview(req, res);
 
     expect(res.status.calledWith(404)).to.be.true;
+  });
+});
+
+// US4.1 - As a moderator, I want a queue of pending reviews with
+// reviewer/movie context, so I can assess them efficiently.
+describe('ReviewController - getPendingReviews', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  const makeQuery = (result) => {
+    const query = {};
+    query.sort = sinon.stub().returns(query);
+    query.populate = sinon.stub().returns(query);
+    query.then = (resolve) => resolve(result);
+    return query;
+  };
+
+  it('should return pending reviews sorted oldest-first with movie/reviewer context', async () => {
+    const fakeReviews = [
+      { _id: 'r1', status: 'Pending', movieId: { title: 'Inception' }, userId: { name: 'Jane' } },
+    ];
+    const query = makeQuery(fakeReviews);
+    sinon.stub(Review, 'find').returns(query);
+
+    const req = {};
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getPendingReviews(req, res);
+
+    expect(Review.find.calledWith({ status: 'Pending' })).to.be.true;
+    expect(query.sort.calledWith({ createdAt: 1 })).to.be.true;
+    expect(res.json.calledWith(fakeReviews)).to.be.true;
+  });
+});
+
+// US4.2 - As a moderator, I want to approve/reject a review with a reason.
+describe('ReviewController - moderateReview', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  const makeReviewDoc = (overrides = {}) => {
+    const doc = { status: 'Pending', movieId: 'movie123', ...overrides };
+    doc.save = sinon.stub().callsFake(async () => doc);
+    return doc;
+  };
+
+  it('should approve a Pending review and recalculate the movie rating', async () => {
+    const reviewDoc = makeReviewDoc();
+    sinon.stub(Review, 'findById').resolves(reviewDoc);
+    sinon.stub(Review, 'aggregate').resolves([{ avgRating: 4.5, count: 2 }]);
+    sinon.stub(Movie, 'findByIdAndUpdate').resolves();
+
+    const req = { params: { id: 'review1' }, body: { decision: 'approve' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(reviewDoc.status).to.equal('Approved');
+    expect(Movie.findByIdAndUpdate.calledWith('movie123', { avgRating: 4.5, reviewCount: 2 })).to.be.true;
+    expect(res.status.called).to.be.false;
+  });
+
+  it('should reject a Pending review with a valid reason', async () => {
+    const reviewDoc = makeReviewDoc();
+    sinon.stub(Review, 'findById').resolves(reviewDoc);
+
+    const req = { params: { id: 'review1' }, body: { decision: 'reject', reason: 'Contains spoilers unrelated to the plot.' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(reviewDoc.status).to.equal('Rejected');
+    expect(reviewDoc.moderationReason).to.equal('Contains spoilers unrelated to the plot.');
+  });
+
+  it('should return 400 when rejecting with a reason under 10 characters', async () => {
+    sinon.stub(Review, 'findById').resolves(makeReviewDoc());
+
+    const req = { params: { id: 'review1' }, body: { decision: 'reject', reason: 'too short' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(res.status.calledWith(400)).to.be.true;
+  });
+
+  it('should return 409 when the review has already been moderated', async () => {
+    sinon.stub(Review, 'findById').resolves(makeReviewDoc({ status: 'Approved' }));
+
+    const req = { params: { id: 'review1' }, body: { decision: 'approve' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(res.status.calledWith(409)).to.be.true;
+  });
+
+  it('should return 404 when the review does not exist', async () => {
+    sinon.stub(Review, 'findById').resolves(null);
+
+    const req = { params: { id: 'missing' }, body: { decision: 'approve' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(res.status.calledWith(404)).to.be.true;
+  });
+
+  it('should return 400 for an invalid decision value', async () => {
+    sinon.stub(Review, 'findById').resolves(makeReviewDoc());
+
+    const req = { params: { id: 'review1' }, body: { decision: 'maybe' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await moderateReview(req, res);
+
+    expect(res.status.calledWith(400)).to.be.true;
   });
 });

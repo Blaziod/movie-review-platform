@@ -13,7 +13,11 @@ const Dashboard = () => {
       </p>
 
       {user?.role === 'admin' ? (
-        <p className="text-sm text-gray-500 mt-4">Moderation queue lands here (MRP-37).</p>
+        <div className="mt-4">
+          <Link to="/admin/moderation-queue">
+            <Button variant="primary">Moderation Queue</Button>
+          </Link>
+        </div>
       ) : (
         <>
           <p className="text-sm text-gray-500 mt-4 mb-4">

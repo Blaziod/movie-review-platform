@@ -22,9 +22,14 @@ const Navbar = () => {
         </Link>
         <div className="flex items-center gap-6">
           {user?.role === 'admin' && (
-            <Link to="/admin/manage-movies" className={NAV_LINK}>
-              Manage Movies
-            </Link>
+            <>
+              <Link to="/admin/manage-movies" className={NAV_LINK}>
+                Manage Movies
+              </Link>
+              <Link to="/admin/moderation-queue" className={NAV_LINK}>
+                Moderation Queue
+              </Link>
+            </>
           )}
           {user && user.role !== 'admin' && (
             <Link to="/write-review" className={NAV_LINK}>

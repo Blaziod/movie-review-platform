@@ -104,4 +104,72 @@ const withdrawReview = async (req, res) => {
   }
 };
 
-module.exports = { submitReview, updateReview, withdrawReview };
+// US4.1 - As a moderator, I want a queue of pending reviews with
+// reviewer/movie context, so I can assess them efficiently.
+const getPendingReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ status: 'Pending' })
+      .sort({ createdAt: 1 })
+      .populate('movieId', 'title')
+      .populate('userId', 'name');
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+const recalculateMovieRating = async (movieId) => {
+  const [stats] = await Review.aggregate([
+    { $match: { movieId, status: 'Approved' } },
+    { $group: { _id: null, avgRating: { $avg: '$rating' }, count: { $sum: 1 } } },
+  ]);
+  await Movie.findByIdAndUpdate(movieId, {
+    avgRating: stats ? Math.round(stats.avgRating * 10) / 10 : 0,
+    reviewCount: stats ? stats.count : 0,
+  });
+};
+
+// US4.2 - As a moderator, I want to approve/reject a review with a reason,
+// so content quality is controlled and reviewers get feedback.
+const moderateReview = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    if (review.status !== 'Pending') {
+      return res.status(409).json({ message: `This review has already been ${review.status.toLowerCase()}.` });
+    }
+
+    const { decision, reason } = req.body;
+
+    if (decision === 'approve') {
+      review.status = 'Approved';
+      await review.save();
+      await recalculateMovieRating(review.movieId);
+      return res.json(review);
+    }
+
+    if (decision === 'reject') {
+      if (!reason || reason.trim().length < 10) {
+        return res.status(400).json({ message: 'Reason must be at least 10 characters.' });
+      }
+      review.status = 'Rejected';
+      review.moderationReason = reason.trim();
+      await review.save();
+      return res.json(review);
+    }
+
+    return res.status(400).json({ message: "Decision must be 'approve' or 'reject'." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+module.exports = {
+  submitReview,
+  updateReview,
+  withdrawReview,
+  getPendingReviews,
+  moderateReview,
+};
