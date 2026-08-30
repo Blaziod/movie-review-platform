@@ -6,6 +6,7 @@ const {
   submitReview,
   updateReview,
   withdrawReview,
+  getMyReviews,
   getPendingReviews,
   moderateReview,
 } = require('../controllers/reviewController');
@@ -370,5 +371,31 @@ describe('ReviewController - moderateReview', () => {
     await moderateReview(req, res);
 
     expect(res.status.calledWith(400)).to.be.true;
+  });
+});
+
+// US3.3 - As a reviewer, I want to see my reviews' status (Pending/
+// Approved/Rejected + reason), so I know the outcome.
+describe('ReviewController - getMyReviews', () => {
+  afterEach(() => {
+    sinon.restore();
+  });
+
+  it("should return only the requesting user's reviews, newest first", async () => {
+    const fakeReviews = [{ _id: 'r1', status: 'Approved', movieId: { title: 'Inception' } }];
+    const query = {};
+    query.sort = sinon.stub().returns(query);
+    query.populate = sinon.stub().returns(query);
+    query.then = (resolve) => resolve(fakeReviews);
+    sinon.stub(Review, 'find').returns(query);
+
+    const req = { user: { id: 'user123' } };
+    const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
+
+    await getMyReviews(req, res);
+
+    expect(Review.find.calledWith({ userId: 'user123' })).to.be.true;
+    expect(query.sort.calledWith({ createdAt: -1 })).to.be.true;
+    expect(res.json.calledWith(fakeReviews)).to.be.true;
   });
 });
