@@ -3,7 +3,7 @@ const { addMovie, getMovies, updateMovie, deleteMovie } = require('../controller
 const { protect, requireAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
 
-router.get('/', protect, requireAdmin, getMovies);
+router.get('/', protect, getMovies);
 router.post('/', protect, requireAdmin, addMovie);
 router.put('/:id', protect, requireAdmin, updateMovie);
 router.delete('/:id', protect, requireAdmin, deleteMovie);
