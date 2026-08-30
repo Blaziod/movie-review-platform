@@ -104,6 +104,19 @@ const withdrawReview = async (req, res) => {
   }
 };
 
+// US3.3 - As a reviewer, I want to see my reviews' status (Pending/
+// Approved/Rejected + reason), so I know the outcome.
+const getMyReviews = async (req, res) => {
+  try {
+    const reviews = await Review.find({ userId: req.user.id })
+      .sort({ createdAt: -1 })
+      .populate('movieId', 'title');
+    res.json(reviews);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 // US4.1 - As a moderator, I want a queue of pending reviews with
 // reviewer/movie context, so I can assess them efficiently.
 const getPendingReviews = async (req, res) => {
@@ -170,6 +183,7 @@ module.exports = {
   submitReview,
   updateReview,
   withdrawReview,
+  getMyReviews,
   getPendingReviews,
   moderateReview,
 };

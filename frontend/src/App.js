@@ -6,6 +6,7 @@ import Dashboard from './pages/Dashboard';
 import AddMovie from './pages/AddMovie';
 import ManageMovies from './pages/ManageMovies';
 import WriteReview from './pages/WriteReview';
+import MyReviews from './pages/MyReviews';
 import ModerationQueue from './pages/ModerationQueue';
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
         <Route path="/admin/manage-movies" element={<ManageMovies />} />
         <Route path="/admin/moderation-queue" element={<ModerationQueue />} />
         <Route path="/write-review" element={<WriteReview />} />
+        <Route path="/my-reviews" element={<MyReviews />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>

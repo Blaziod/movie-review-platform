@@ -32,9 +32,14 @@ const Navbar = () => {
             </>
           )}
           {user && user.role !== 'admin' && (
-            <Link to="/write-review" className={NAV_LINK}>
-              Write a Review
-            </Link>
+            <>
+              <Link to="/write-review" className={NAV_LINK}>
+                Write a Review
+              </Link>
+              <Link to="/my-reviews" className={NAV_LINK}>
+                My Reviews
+              </Link>
+            </>
           )}
           {user ? (
             <>
