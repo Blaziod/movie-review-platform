@@ -2,6 +2,9 @@ import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import Logo from '../components/Logo';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 // As a registered user, I want to log in, so I reach my role's dashboard.
 const Login = () => {
@@ -26,36 +29,45 @@ const Login = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded" noValidate>
-        <h1 className="text-2xl font-bold mb-4 text-center">Log In</h1>
+    <div className="max-w-md mx-auto mt-16 px-4">
+      <form onSubmit={handleSubmit} className="bg-surface p-10 rounded-2xl" noValidate>
+        <div className="flex justify-center mb-3">
+          <Logo />
+        </div>
+        <p className="text-center text-sm text-gray-400 mb-6">
+          Join Reelboxed to find good movies you want to see
+        </p>
 
         {error && (
-          <div className="mb-4 p-2 text-sm text-red-700 bg-red-50 border border-red-300 rounded">
+          <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">
             {error}
           </div>
         )}
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
-        />
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
-          Log In
-        </button>
+        <div className="space-y-3 mb-4">
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+          />
+          <Input
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+          />
+        </div>
 
-        <p className="text-sm text-center mt-4">
-          Don't have an account? <Link to="/register" className="text-blue-600">Register</Link>
+        <Button type="submit" className="w-full">
+          Log In
+        </Button>
+
+        <p className="text-sm text-center mt-6 text-gray-400">
+          Don't have an account?{' '}
+          <Link to="/register" className="text-white underline">
+            Register
+          </Link>
         </p>
       </form>
     </div>

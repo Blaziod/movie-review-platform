@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
+import Logo from '../components/Logo';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
-//As a visitor, I want to register as a Reviewer, so that I can submit reviews.
+// As a visitor, I want to register as a Reviewer, so that I can submit reviews.
 const Register = () => {
   const [formData, setFormData] = useState({ name: '', email: '', password: '' });
   const [errors, setErrors] = useState({});
@@ -36,49 +39,63 @@ const Register = () => {
   };
 
   return (
-    <div className="max-w-md mx-auto mt-20">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded" noValidate>
-        <h1 className="text-2xl font-bold mb-4 text-center">Register</h1>
+    <div className="max-w-md mx-auto mt-16 px-4">
+      <form onSubmit={handleSubmit} className="bg-surface p-10 rounded-2xl" noValidate>
+        <div className="flex justify-center mb-3">
+          <Logo />
+        </div>
+        <p className="text-center text-sm text-gray-400 mb-6">
+          Join Reelboxed to find good movies you want to see
+        </p>
 
         {serverError && (
-          <div className="mb-4 p-2 text-sm text-red-700 bg-red-50 border border-red-300 rounded">
+          <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">
             {serverError}
           </div>
         )}
 
-        <input
-          type="text"
-          placeholder="Name"
-          value={formData.name}
-          onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.name ? 'border-red-500' : ''}`}
-        />
-        {errors.name && <p className="text-xs text-red-600 mb-3">{errors.name}</p>}
+        <div className="mb-1">
+          <Input
+            type="text"
+            placeholder="Name"
+            value={formData.name}
+            onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+            error={errors.name}
+          />
+          {errors.name && <p className="text-xs text-danger mt-1 mb-2 pl-2">{errors.name}</p>}
+        </div>
 
-        <input
-          type="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.email ? 'border-red-500' : ''}`}
-        />
-        {errors.email && <p className="text-xs text-red-600 mb-3">{errors.email}</p>}
+        <div className="mb-1">
+          <Input
+            type="email"
+            placeholder="Email address"
+            value={formData.email}
+            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+            error={errors.email}
+          />
+          {errors.email && <p className="text-xs text-danger mt-1 mb-2 pl-2">{errors.email}</p>}
+        </div>
 
-        <input
-          type="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={(e) => setFormData({ ...formData, password: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.password ? 'border-red-500' : ''}`}
-        />
-        {errors.password && <p className="text-xs text-red-600 mb-3">{errors.password}</p>}
+        <div className="mb-1">
+          <Input
+            type="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+            error={errors.password}
+          />
+          {errors.password && <p className="text-xs text-danger mt-1 mb-2 pl-2">{errors.password}</p>}
+        </div>
 
-        <button type="submit" className="w-full bg-green-600 text-white p-2 rounded mt-2">
+        <Button type="submit" className="w-full mt-3">
           Register
-        </button>
+        </Button>
 
-        <p className="text-sm text-center mt-4">
-          Already have an account? <Link to="/login" className="text-blue-600">Log in</Link>
+        <p className="text-sm text-center mt-6 text-gray-400">
+          Already have an account?{' '}
+          <Link to="/login" className="text-white underline">
+            Log in
+          </Link>
         </p>
       </form>
     </div>
