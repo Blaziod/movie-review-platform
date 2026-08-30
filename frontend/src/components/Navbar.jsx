@@ -1,9 +1,9 @@
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import Logo from './Logo';
+import HeaderLogo from './HeaderLogo';
 import Button from './Button';
 
-const NAV_LINK = 'text-xs font-semibold uppercase tracking-wider text-gray-400 hover:text-white transition-colors';
+const NAV_LINK = 'text-xs font-semibold uppercase tracking-wider text-[#808080] hover:text-white transition-colors';
 
 const Navbar = () => {
   const { user, logout } = useAuth();
@@ -18,9 +18,12 @@ const Navbar = () => {
     <div className="px-4 pt-4">
       <nav className="max-w-5xl mx-auto bg-surface rounded-pill px-6 py-3 flex justify-between items-center">
         <Link to="/">
-          <Logo />
+          <HeaderLogo />
         </Link>
         <div className="flex items-center gap-6">
+          <Link to="/" className={NAV_LINK}>
+            Movies
+          </Link>
           {user?.role === 'admin' && (
             <>
               <Link to="/admin/manage-movies" className={NAV_LINK}>
@@ -32,14 +35,9 @@ const Navbar = () => {
             </>
           )}
           {user && user.role !== 'admin' && (
-            <>
-              <Link to="/write-review" className={NAV_LINK}>
-                Write a Review
-              </Link>
-              <Link to="/my-reviews" className={NAV_LINK}>
-                My Reviews
-              </Link>
-            </>
+            <Link to="/my-reviews" className={NAV_LINK}>
+              My Reviews
+            </Link>
           )}
           {user ? (
             <>

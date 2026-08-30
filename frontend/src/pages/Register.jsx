@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import axiosInstance from '../axiosConfig';
-import Logo from '../components/Logo';
+import HeaderLogo from '../components/HeaderLogo';
 import Input from '../components/Input';
 import Button from '../components/Button';
 
@@ -42,9 +42,9 @@ const Register = () => {
     <div className="max-w-md mx-auto mt-16 px-4">
       <form onSubmit={handleSubmit} className="bg-surface p-10 rounded-2xl" noValidate>
         <div className="flex justify-center mb-3">
-          <Logo />
+          <HeaderLogo />
         </div>
-        <p className="text-center text-sm text-gray-400 mb-6">
+        <p className="text-center text-sm text-[#808080] mb-6">
           Join Reelboxed to find good movies you want to see
         </p>
 

@@ -5,6 +5,7 @@ import axiosInstance from '../axiosConfig';
 import StarRating from '../components/StarRating';
 import StatusBadge from '../components/StatusBadge';
 import Button from '../components/Button';
+import Footer from '../components/Footer';
 
 const timeAgo = (dateString) => {
   const diffMs = Date.now() - new Date(dateString).getTime();
@@ -41,8 +42,8 @@ const MyReviews = () => {
       {reviews.length === 0 && !error && (
         <div className="text-center py-10">
           <p className="text-gray-500 mb-4">You haven't reviewed any movies yet.</p>
-          <Link to="/write-review">
-            <Button variant="primary">Write a Review</Button>
+          <Link to="/">
+            <Button variant="primary">Browse Movies</Button>
           </Link>
         </div>
       )}
@@ -63,6 +64,8 @@ const MyReviews = () => {
           </div>
         ))}
       </div>
+
+      <Footer />
     </div>
   );
 };

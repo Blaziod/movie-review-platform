@@ -1,11 +1,11 @@
-const mongoose = require('mongoose');
 const Movie = require('../models/Movie');
+const Review = require('../models/Review');
 
 const CURRENT_YEAR = new Date().getFullYear();
 
 // US2.1 - As an admin, I want to add a movie (title, year, genre, synopsis)
 const addMovie = async (req, res) => {
-  const { title, year, genre, synopsis } = req.body;
+  const { title, year, genre, synopsis, imageUrl, duration } = req.body;
 
   if (!title || !title.trim()) {
     return res.status(400).json({ message: 'Title is required.' });
@@ -23,6 +23,8 @@ const addMovie = async (req, res) => {
       year: Number(year),
       genre: genre.trim(),
       synopsis: synopsis ? synopsis.trim() : '',
+      imageUrl: imageUrl ? imageUrl.trim() : '',
+      duration: duration ? duration.trim() : '',
     });
     res.status(201).json(movie);
   } catch (error) {
@@ -30,10 +32,36 @@ const addMovie = async (req, res) => {
   }
 };
 
+// US5.1 - As any visitor, I want to browse/search the catalog by title or
+// genre. 
 const getMovies = async (req, res) => {
   try {
-    const movies = await Movie.find().sort({ createdAt: -1 });
+    const { title, genre } = req.query;
+    const filter = {};
+    if (title) filter.title = { $regex: title, $options: 'i' };
+    if (genre) filter.genre = { $regex: genre, $options: 'i' };
+
+    const movies = await Movie.find(filter).sort({ createdAt: -1 });
     res.json(movies);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// US5.2 - As any visitor, I want to see a movie's average rating and its
+// approved reviews.
+const getMovieById = async (req, res) => {
+  try {
+    const movie = await Movie.findById(req.params.id);
+    if (!movie) {
+      return res.status(404).json({ message: 'Movie not found' });
+    }
+
+    const reviews = await Review.find({ movieId: movie._id, status: 'Approved' })
+      .sort({ createdAt: -1 })
+      .populate('userId', 'name');
+
+    res.json({ movie, reviews });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -48,7 +76,7 @@ const updateMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    const { title, year, genre, synopsis } = req.body;
+    const { title, year, genre, synopsis, imageUrl, duration } = req.body;
 
     if (title !== undefined) {
       if (!title.trim()) return res.status(400).json({ message: 'Title is required.' });
@@ -67,6 +95,12 @@ const updateMovie = async (req, res) => {
     if (synopsis !== undefined) {
       movie.synopsis = synopsis.trim();
     }
+    if (imageUrl !== undefined) {
+      movie.imageUrl = imageUrl.trim();
+    }
+    if (duration !== undefined) {
+      movie.duration = duration.trim();
+    }
 
     const updated = await movie.save();
     res.json(updated);
@@ -74,9 +108,6 @@ const updateMovie = async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 };
-
-const countApprovedReviews = (movieId) =>
-  mongoose.connection.collection('reviews').countDocuments({ movieId, status: 'Approved' });
 
 // AC: a movie with approved reviews requires explicit confirmation before
 // deletion
@@ -87,7 +118,7 @@ const deleteMovie = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
-    const approvedReviewCount = await countApprovedReviews(movie._id);
+    const approvedReviewCount = await Review.countDocuments({ movieId: movie._id, status: 'Approved' });
 
     if (approvedReviewCount > 0 && req.query.confirm !== 'true') {
       return res.status(409).json({
@@ -103,4 +134,4 @@ const deleteMovie = async (req, res) => {
   }
 };
 
-module.exports = { addMovie, getMovies, updateMovie, deleteMovie };
+module.exports = { addMovie, getMovies, getMovieById, updateMovie, deleteMovie };

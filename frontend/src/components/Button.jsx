@@ -1,6 +1,6 @@
 const VARIANTS = {
   primary: 'bg-brand-orange text-bg font-semibold hover:bg-brand-orange-dark',
-  secondary: 'bg-surface-light text-white font-medium hover:bg-input border border-border',
+  secondary: 'bg-[#D9D9D920] text-white font-medium hover:bg-input border border-border',
   outlineSuccess: 'bg-transparent border border-success text-success font-medium hover:bg-success/10',
   outlineDanger: 'bg-transparent border border-danger text-danger font-medium hover:bg-danger/10',
 };
