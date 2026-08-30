@@ -1,4 +1,6 @@
+import { Link } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import Button from '../components/Button';
 
 const Dashboard = () => {
   const { user } = useAuth();
@@ -9,11 +11,19 @@ const Dashboard = () => {
       <p className="text-gray-400">
         Logged in as <span className="font-semibold text-white">{user?.role}</span>.
       </p>
-      <p className="text-sm text-gray-500 mt-4">
-        {user?.role === 'admin'
-          ? 'Moderation queue lands here (MRP-37).'
-          : 'Movie catalog lands here (MRP-45).'}
-      </p>
+
+      {user?.role === 'admin' ? (
+        <p className="text-sm text-gray-500 mt-4">Moderation queue lands here (MRP-37).</p>
+      ) : (
+        <>
+          <p className="text-sm text-gray-500 mt-4 mb-4">
+            Full movie catalog browsing lands here (MRP-45).
+          </p>
+          <Link to="/write-review">
+            <Button variant="primary">Write a Review</Button>
+          </Link>
+        </>
+      )}
     </div>
   );
 };
