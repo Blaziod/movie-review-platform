@@ -8,6 +8,7 @@ const MIN_TEXT_LENGTH = 20;
 
 // US3.1 - As a reviewer, I want to submit a rating (1-5) + review text for a
 // movie, so I can share my opinion.
+
 const WriteReview = () => {
   const { user } = useAuth();
   const authHeader = { headers: { Authorization: `Bearer ${user?.token}` } };
@@ -17,7 +18,12 @@ const WriteReview = () => {
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [errors, setErrors] = useState({});
-  const [success, setSuccess] = useState(false);
+
+  // US3.2 - the review just submitted, kept here so it can be edited or
+  // withdrawn immediately without needing the full "My Reviews" list
+  const [submittedReview, setSubmittedReview] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editErrors, setEditErrors] = useState({});
 
   useEffect(() => {
     axiosInstance
@@ -28,6 +34,7 @@ const WriteReview = () => {
   }, []);
 
   const selectedMovie = movies.find((m) => m._id === movieId);
+  const reviewedMovie = submittedReview && movies.find((m) => m._id === submittedReview.movieId);
 
   const validate = () => {
     const next = {};
@@ -42,12 +49,11 @@ const WriteReview = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    setSuccess(false);
     if (!validate()) return;
 
     try {
-      await axiosInstance.post('/api/reviews', { movieId, rating, text }, authHeader);
-      setSuccess(true);
+      const response = await axiosInstance.post('/api/reviews', { movieId, rating, text }, authHeader);
+      setSubmittedReview(response.data);
       setMovieId('');
       setRating(0);
       setText('');
@@ -57,6 +63,105 @@ const WriteReview = () => {
     }
   };
 
+  const startEditingReview = () => {
+    setRating(submittedReview.rating);
+    setText(submittedReview.text);
+    setIsEditing(true);
+    setEditErrors({});
+  };
+
+  const saveEditedReview = async () => {
+    setEditErrors({});
+    try {
+      const response = await axiosInstance.put(
+        `/api/reviews/${submittedReview._id}`,
+        { rating, text },
+        authHeader
+      );
+      setSubmittedReview(response.data);
+      setIsEditing(false);
+    } catch (error) {
+      setEditErrors({ form: error.response?.data?.message || 'Failed to update review.' });
+    }
+  };
+
+  const withdrawReview = async () => {
+    try {
+      await axiosInstance.delete(`/api/reviews/${submittedReview._id}`, authHeader);
+      setSubmittedReview(null);
+
+      setRating(0);
+      setText('');
+      setIsEditing(false);
+    } catch (error) {
+      setEditErrors({ form: error.response?.data?.message || 'Failed to withdraw review.' });
+    }
+  };
+
+  // AC: editing is disabled once a review is no longer Pending
+  if (submittedReview) {
+    const isPending = submittedReview.status === 'Pending';
+
+    return (
+      <div className="max-w-md mx-auto mt-16 px-4">
+        <div className="bg-surface p-8 rounded-2xl">
+          <h1 className="text-lg font-bold mb-1 text-white">
+            Your review {reviewedMovie ? `of ${reviewedMovie.title}` : ''}
+          </h1>
+          <span className="inline-block text-xs px-3 py-1 rounded-pill bg-warning-bg text-warning mb-4">
+            {submittedReview.status}
+          </span>
+
+          {editErrors.form && (
+            <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">{editErrors.form}</div>
+          )}
+
+          {isEditing ? (
+            <>
+              <div className="mb-3">
+                <StarRating value={rating} onChange={setRating} />
+              </div>
+              <textarea
+                value={text}
+                onChange={(e) => setText(e.target.value)}
+                rows={4}
+                className="w-full mb-4 px-4 py-3 rounded-xl bg-input text-white border border-transparent focus:outline-none focus:border-brand-orange"
+              />
+              <div className="flex gap-2">
+                <Button variant="primary" className="flex-1" onClick={saveEditedReview}>
+                  Save
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => setIsEditing(false)}>
+                  Cancel
+                </Button>
+              </div>
+            </>
+          ) : (
+            <>
+              <StarRating value={submittedReview.rating} readOnly size="text-xl" />
+              <p className="text-gray-300 text-sm mt-3 mb-6">{submittedReview.text}</p>
+
+              {isPending ? (
+                <div className="flex gap-2">
+                  <Button variant="secondary" className="flex-1" onClick={startEditingReview}>
+                    Edit
+                  </Button>
+                  <Button variant="outlineDanger" className="flex-1" onClick={withdrawReview}>
+                    Withdraw
+                  </Button>
+                </div>
+              ) : (
+                <p className="text-xs text-gray-500">
+                  This review has been {submittedReview.status.toLowerCase()} and can no longer be edited.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-md mx-auto mt-16 px-4">
       <form onSubmit={handleSubmit} className="bg-surface p-8 rounded-2xl" noValidate>
@@ -64,11 +169,6 @@ const WriteReview = () => {
           What Do You Rate {selectedMovie ? selectedMovie.title : 'This Movie'}
         </h1>
 
-        {success && (
-          <div className="mb-4 px-4 py-2 text-sm text-success bg-success-bg rounded-xl">
-            Review submitted - pending moderation.
-          </div>
-        )}
         {errors.form && (
           <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">
             {errors.form}
