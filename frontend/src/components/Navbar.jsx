@@ -17,7 +17,7 @@ const Navbar = () => {
         {user ? (
           <>
             {user.role === 'admin' && (
-              <Link to="/admin/add-movie" className="mr-4">Add Movie</Link>
+              <Link to="/admin/manage-movies" className="mr-4">Manage Movies</Link>
             )}
             <span className="mr-4">Hi, {user.name}</span>
             <button
