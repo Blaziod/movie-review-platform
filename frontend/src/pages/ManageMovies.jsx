@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 // US2.2 - As an admin, I want to edit or remove a movie, so I can correct
 // errors or retire titles.
@@ -33,9 +35,9 @@ const ManageMovies = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="max-w-md mx-auto mt-20 text-center text-gray-600">
+      <div className="max-w-md mx-auto mt-20 text-center text-gray-400">
         Admin access required.{' '}
-        <button onClick={() => navigate('/dashboard')} className="text-blue-600 underline">
+        <button onClick={() => navigate('/dashboard')} className="text-brand-orange underline">
           Back to dashboard
         </button>
       </div>
@@ -88,111 +90,102 @@ const ManageMovies = () => {
   };
 
   return (
-    <div className="max-w-2xl mx-auto mt-12">
-      <div className="flex justify-between items-center mb-4">
-        <h1 className="text-2xl font-bold">Manage Movies</h1>
-        <Link to="/admin/add-movie" className="bg-green-600 text-white px-4 py-2 rounded">
-          + Add Movie
+    <div className="max-w-4xl mx-auto mt-12 px-4">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-2xl font-bold text-white uppercase tracking-wide">Manage Movies</h1>
+        <Link to="/admin/add-movie">
+          <Button variant="primary" className="text-sm">
+            + Add Movie
+          </Button>
         </Link>
       </div>
 
       {error && (
-        <div className="mb-4 p-2 text-sm text-red-700 bg-red-50 border border-red-300 rounded">
-          {error}
-        </div>
+        <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">{error}</div>
       )}
 
       {movies.length === 0 && <p className="text-gray-500">No movies in the catalog yet.</p>}
 
-      <ul className="space-y-3">
-        {movies.map((movie) => (
-          <li key={movie._id} className="bg-white p-4 shadow rounded">
-            {editingId === movie._id ? (
-              <div>
-                {editErrors.form && (
-                  <p className="text-xs text-red-600 mb-2">{editErrors.form}</p>
-                )}
-                <input
-                  className="w-full mb-2 p-2 border rounded"
+      <div className="grid sm:grid-cols-2 gap-6">
+        {movies.map((movie) =>
+          editingId === movie._id ? (
+            <div key={movie._id} className="bg-surface p-5 rounded-2xl sm:col-span-2 max-w-md">
+              {editErrors.form && <p className="text-xs text-danger mb-2">{editErrors.form}</p>}
+              <div className="space-y-2">
+                <Input
                   value={editForm.title}
                   onChange={(e) => setEditForm({ ...editForm, title: e.target.value })}
-                  placeholder="Title"
+                  placeholder="Movie Title"
                 />
-                <input
+                <Input
                   type="number"
-                  className="w-full mb-2 p-2 border rounded"
                   value={editForm.year}
                   onChange={(e) => setEditForm({ ...editForm, year: e.target.value })}
                   placeholder="Year"
                 />
-                <input
-                  className="w-full mb-2 p-2 border rounded"
+                <Input
                   value={editForm.genre}
                   onChange={(e) => setEditForm({ ...editForm, genre: e.target.value })}
                   placeholder="Genre"
                 />
                 <textarea
-                  className="w-full mb-2 p-2 border rounded"
                   value={editForm.synopsis}
                   onChange={(e) => setEditForm({ ...editForm, synopsis: e.target.value })}
                   placeholder="Synopsis"
                   rows={2}
+                  className="w-full px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
                 />
-                <div className="flex gap-2">
-                  <button
-                    onClick={() => saveEdit(movie._id)}
-                    className="bg-blue-600 text-white px-3 py-1 rounded"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={() => setEditingId(null)}
-                    className="bg-gray-200 px-3 py-1 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
               </div>
-            ) : (
-              <div className="flex justify-between items-center">
-                <div>
-                  <p className="font-semibold">
-                    {movie.title} ({movie.year})
-                  </p>
-                  <p className="text-sm text-gray-500">{movie.genre}</p>
-                </div>
-                <div className="flex gap-3">
-                  <button onClick={() => startEdit(movie)} className="text-blue-600">
-                    Edit
-                  </button>
-                  <button onClick={() => requestDelete(movie._id)} className="text-red-600">
-                    Delete
-                  </button>
-                </div>
+              <div className="flex gap-2 mt-3">
+                <Button variant="primary" className="flex-1" onClick={() => saveEdit(movie._id)}>
+                  Submit
+                </Button>
+                <Button variant="secondary" className="flex-1" onClick={() => setEditingId(null)}>
+                  Cancel
+                </Button>
               </div>
-            )}
-          </li>
-        ))}
-      </ul>
+            </div>
+          ) : (
+            <div key={movie._id} className="flex items-center gap-4">
+              <div className="w-14 h-20 rounded-lg bg-surface-light flex items-center justify-center text-gray-500 text-xs shrink-0">
+                {movie.title.slice(0, 1)}
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-semibold text-white truncate">{movie.title}</p>
+                <p className="text-sm text-gray-400">
+                  {movie.year} &bull; {movie.genre}
+                </p>
+              </div>
+              <div className="flex gap-2 shrink-0">
+                <Button variant="secondary" className="text-sm px-4 py-1.5" onClick={() => startEdit(movie)}>
+                  Edit
+                </Button>
+                <Button
+                  variant="outlineDanger"
+                  className="text-sm px-4 py-1.5"
+                  onClick={() => requestDelete(movie._id)}
+                >
+                  Delete
+                </Button>
+              </div>
+            </div>
+          )
+        )}
+      </div>
 
       {pendingDelete && (
-        <div className="fixed inset-0 bg-black bg-opacity-40 flex items-center justify-center">
-          <div className="bg-white p-6 rounded shadow-lg max-w-sm">
-            <p className="mb-4">{pendingDelete.message}</p>
-            <p className="text-sm text-red-600 mb-4">Deleting it is permanent.</p>
-            <div className="flex gap-3 justify-end">
-              <button
-                onClick={() => setPendingDelete(null)}
-                className="px-4 py-2 border rounded"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={confirmDelete}
-                className="px-4 py-2 bg-red-600 text-white rounded"
-              >
+        <div className="fixed inset-0 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-surface p-6 rounded-2xl max-w-sm w-full">
+            <h2 className="font-bold text-white mb-3">Delete Movie</h2>
+            <p className="text-sm text-gray-300 mb-1">{pendingDelete.message}</p>
+            <p className="text-sm text-danger mb-4">Deleting it is permanent.</p>
+            <div className="flex gap-2">
+              <Button variant="primary" className="flex-1" onClick={confirmDelete}>
                 Delete
-              </button>
+              </Button>
+              <Button variant="secondary" className="flex-1" onClick={() => setPendingDelete(null)}>
+                Cancel
+              </Button>
             </div>
           </div>
         </div>

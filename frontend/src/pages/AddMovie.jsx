@@ -2,6 +2,8 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import axiosInstance from '../axiosConfig';
+import Input from '../components/Input';
+import Button from '../components/Button';
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -47,9 +49,9 @@ const AddMovie = () => {
 
   if (user?.role !== 'admin') {
     return (
-      <div className="max-w-md mx-auto mt-20 text-center text-gray-600">
+      <div className="max-w-md mx-auto mt-20 text-center text-gray-400">
         Admin access required.{' '}
-        <button onClick={() => navigate('/dashboard')} className="text-blue-600 underline">
+        <button onClick={() => navigate('/dashboard')} className="text-brand-orange underline">
           Back to dashboard
         </button>
       </div>
@@ -57,59 +59,65 @@ const AddMovie = () => {
   }
 
   return (
-    <div className="max-w-md mx-auto mt-16">
-      <form onSubmit={handleSubmit} className="bg-white p-6 shadow-md rounded" noValidate>
-        <h1 className="text-2xl font-bold mb-4 text-center">Add Movie</h1>
+    <div className="max-w-md mx-auto mt-16 px-4">
+      <form onSubmit={handleSubmit} className="bg-surface p-8 rounded-2xl" noValidate>
+        <h1 className="text-lg font-bold mb-6 text-white">Add Movie</h1>
 
         {success && (
-          <div className="mb-4 p-2 text-sm text-green-700 bg-green-50 border border-green-300 rounded">
+          <div className="mb-4 px-4 py-2 text-sm text-success bg-success-bg rounded-xl">
             Movie added to the catalog.
           </div>
         )}
         {errors.form && (
-          <div className="mb-4 p-2 text-sm text-red-700 bg-red-50 border border-red-300 rounded">
+          <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">
             {errors.form}
           </div>
         )}
 
-        <input
-          type="text"
-          placeholder="Title"
-          value={formData.title}
-          onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.title ? 'border-red-500' : ''}`}
-        />
-        {errors.title && <p className="text-xs text-red-600 mb-3">{errors.title}</p>}
+        <div className="space-y-1 mb-1">
+          <Input
+            type="text"
+            placeholder="Movie Title"
+            value={formData.title}
+            onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+            error={errors.title}
+          />
+          {errors.title && <p className="text-xs text-danger mt-1 pl-2">{errors.title}</p>}
+        </div>
 
-        <input
-          type="number"
-          placeholder="Year"
-          value={formData.year}
-          onChange={(e) => setFormData({ ...formData, year: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.year ? 'border-red-500' : ''}`}
-        />
-        {errors.year && <p className="text-xs text-red-600 mb-3">{errors.year}</p>}
+        <div className="space-y-1 my-2">
+          <Input
+            type="number"
+            placeholder="Year"
+            value={formData.year}
+            onChange={(e) => setFormData({ ...formData, year: e.target.value })}
+            error={errors.year}
+          />
+          {errors.year && <p className="text-xs text-danger mt-1 pl-2">{errors.year}</p>}
+        </div>
 
-        <input
-          type="text"
-          placeholder="Genre"
-          value={formData.genre}
-          onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
-          className={`w-full mb-1 p-2 border rounded ${errors.genre ? 'border-red-500' : ''}`}
-        />
-        {errors.genre && <p className="text-xs text-red-600 mb-3">{errors.genre}</p>}
+        <div className="space-y-1 mb-2">
+          <Input
+            type="text"
+            placeholder="Genre"
+            value={formData.genre}
+            onChange={(e) => setFormData({ ...formData, genre: e.target.value })}
+            error={errors.genre}
+          />
+          {errors.genre && <p className="text-xs text-danger mt-1 pl-2">{errors.genre}</p>}
+        </div>
 
         <textarea
-          placeholder="Synopsis (optional)"
+          placeholder="Synopsis"
           value={formData.synopsis}
           onChange={(e) => setFormData({ ...formData, synopsis: e.target.value })}
-          className="w-full mb-4 p-2 border rounded"
+          className="w-full mb-4 px-4 py-3 rounded-xl bg-input text-white placeholder-gray-500 border border-transparent focus:outline-none focus:border-brand-orange"
           rows={3}
         />
 
-        <button type="submit" className="w-full bg-blue-600 text-white p-2 rounded">
-          Add Movie
-        </button>
+        <Button type="submit" className="w-full">
+          Submit
+        </Button>
       </form>
     </div>
   );
