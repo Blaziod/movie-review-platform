@@ -4,6 +4,7 @@ import Register from './pages/Register';
 import Login from './pages/Login';
 import Dashboard from './pages/Dashboard';
 import AddMovie from './pages/AddMovie';
+import ManageMovies from './pages/ManageMovies';
 
 function App() {
   return (
@@ -14,6 +15,7 @@ function App() {
         <Route path="/login" element={<Login />} />
         <Route path="/dashboard" element={<Dashboard />} />
         <Route path="/admin/add-movie" element={<AddMovie />} />
+        <Route path="/admin/manage-movies" element={<ManageMovies />} />
         <Route path="*" element={<Navigate to="/login" replace />} />
       </Routes>
     </Router>
