@@ -1,13 +1,39 @@
-# Movie Review Platform
+# Reelboxed — Movie Review Platform
 
-IFN636 Assessment 1 - Software Requirements Analysis and Design.
+**IFN636 Assessment 1** Software Requirements Analysis and Design
 
-A small MERN application where **Reviewers** submit ratings and written reviews against a movie catalog, and a **Moderator (Admin)** curates the catalog and approves/rejects submissions before they go public. Two roles, two end-to-end workflows, one deployed application.
+**Author:** Uwoh Princestan Chizoba
+**Student ID:** n12690759
 
-- Full requirements, backlog and decision log: `Assessment1_MovieReviewPlatform/01_Problem_Requirements_ProjectManagement.md` in the assessment report
+## Description
+
+Reelboxed is a small MERN application where **Reviewers** submit star ratings and written reviews against a movie catalog, and an **Admin (Moderator)** curates the catalog and approves or rejects submissions before they go public. Two roles, two end-to-end workflows (review submission and moderation), one deployed application.
+
 - Jira board: `<JIRA BOARD URL>`
 - Figma prototype: `<FIGMA VIEW-ONLY LINK>`
-- Live deployment: `<EC2 PUBLIC URL>` *(not yet deployed - see Deployment below)*
+
+## Live deployment
+
+- **URL:** http://3.26.65.198:3000
+- **EC2 instance ID:** `i-008a6f4ba4da70da6`
+
+## How to use the website
+
+**As a visitor (no account needed):**
+1. Open the site, you land on the **Movie List** (catalog) page.
+2. Search by title or filter by genre using the controls at the top right.
+3. Click any movie poster to open its **Movie Detail** page, showing its average rating and all approved reviews.
+
+**As a Reviewer:**
+1. Click **Register** to create an account, then **Log In**.
+2. Open any movie's detail page, pick a star rating and write a review (minimum 20 characters), then submit — it goes in as **Pending**.
+3. Check **My Reviews** to see the status of everything you've submitted (Pending / Approved / Rejected, with the moderator's reason if rejected).
+4. While a review is still Pending, you can edit or withdraw it from **My Reviews**. Once it's Approved it's locked.
+
+**As an Admin:**
+1. Log in with an admin account (see *Creating an admin account* below — there's no public admin sign-up by design).
+2. Use **Manage Movies** to add, edit, or delete catalog entries (poster URL and duration are optional fields).
+3. Use the **Moderation Queue** to review Pending submissions and Approve or Reject each one (rejection requires a reason, shown to the reviewer). Approving a review immediately recalculates that movie's average rating.
 
 ## Tech stack
 
@@ -23,22 +49,22 @@ MERN, following the course's own reference conventions (`controllers/` + `models
 movie-review-platform/
 ├── backend/
 │   ├── config/db.js            # Mongoose connection
-│   ├── controllers/            # Route handler logic (authController, ...)
+│   ├── controllers/            # Route handler logic
 │   ├── middleware/              # protect (JWT) + requireAdmin (role gate)
-│   ├── models/                 # Mongoose schemas (User, ...)
+│   ├── models/                 # Mongoose schemas (User, Movie, Review)
 │   ├── routes/                 # Express routers, mounted in server.js
 │   ├── seed/createAdmin.js     # One-off script to create/promote an admin
 │   ├── test/                   # Mocha/Chai/Sinon unit tests
 │   └── server.js
 └── frontend/
     └── src/
-        ├── pages/               # Register, Login, Dashboard, ...
-        ├── components/          # Navbar, ...
+        ├── pages/               # Catalog, MovieDetail, Login, Register, Dashboard, ...
+        ├── components/          # Navbar, Footer, RatingStats, StarRating, ...
         ├── context/AuthContext.js
         └── axiosConfig.jsx
 ```
 
-## Setup
+## Install and set up (local development)
 
 **Prerequisites**: Node.js, a MongoDB connection string (local or [Atlas](https://account.mongodb.com/account/login)).
 
@@ -56,6 +82,12 @@ JWT_SECRET=<a long random secret>
 PORT=5001
 ```
 
+In `frontend/src/axiosConfig.jsx`, make sure the local dev line is the active `baseURL`:
+
+```js
+baseURL: 'http://localhost:5001', 
+```
+
 Run both servers together from the project root:
 
 ```bash
@@ -67,7 +99,7 @@ npm run dev
 
 ### Creating an admin account
 
-There is **no public admin sign-up** - only Reviewer self-registration (US1.1) - by design, matching "trusted staff only" (US1.3). Create or promote an admin directly:
+There is **no public admin sign-up** — only Reviewer self-registration — by design, matching "trusted staff only" access. Create or promote an admin directly:
 
 ```bash
 cd backend
@@ -85,18 +117,23 @@ npm test
 
 ## Architecture summary
 
-Four-layer architecture (Presentation → Business Logic → Data Access → Database), matching the course's Software Layers and Tiers model:
+Four-layer architecture (Presentation → Business Logic → Data Access → Database):
 
 - **Presentation**: React pages/components (`frontend/src`)
 - **Business logic**: Express controllers + middleware (`backend/controllers`, `backend/middleware`)
 - **Data access**: Mongoose models (`backend/models`)
 - **Database**: MongoDB
 
-Authentication is JWT-based (`Authorization: Bearer <token>`). `protect` verifies the token and attaches `req.user`; `requireAdmin` gates admin-only routes server-side (not just hidden UI) - a Reviewer token hitting an admin route gets a `403`, verified in `backend/test/authMiddleware.test.js` and live via curl during development.
-
-Full SysML design (block/internal-block/requirements diagrams, sequence diagrams for both workflows, traceability matrix): see `Assessment1_MovieReviewPlatform/02_System_Design.md` in the assessment report.
-
+Authentication is JWT-based (`Authorization: Bearer <token>`). `protect` verifies the token and attaches `req.user`; `requireAdmin` gates admin-only routes server-side (not just hidden UI) — a Reviewer token hitting an admin route gets a `403`.
 
 ## Deployment
 
-*Not yet deployed - this section will be filled in once the application is deployed to EC2 (Assessment Section 5).* Planned approach: manual deployment (per the course's Manual Deployment lecture) - provision an EC2 instance, clone this repo, `npm run install-all`, set `backend/.env`, keep the Node process running (e.g. via `pm2` or `nohup`), open the required inbound port in the instance's security group, and set the frontend's `axiosConfig.jsx` `baseURL` to the instance's public address.
+Manually deployed to a single AWS EC2 instance (`i-008a6f4ba4da70da6`), following the course's Manual Deployment method:
+
+1. SSH into the instance and install Node.js, git, and PM2.
+2. `git clone` this repository onto the instance.
+3. Set `backend/.env` with the production `MONGO_URI` and `JWT_SECRET`, then run the backend persistently with `pm2 start server.js --name mrp-backend`.
+4. Build the frontend locally with `axiosConfig.jsx`'s `baseURL` pointed at the instance's public IP, then copy the `build/` folder to the instance and serve it with `pm2 start "serve -s build -l 3000" --name mrp-frontend`.
+5. Open inbound ports `3000` (frontend) and `5001` (backend) in the instance's security group.
+
+Redeploying after a code change is manual (no CI/CD pipeline): pull/copy the updated files, then `pm2 restart mrp-backend` (backend) or rebuild + re-copy `build/` (frontend) — PM2 does not hot-reload code changes on its own.
