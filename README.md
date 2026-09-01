@@ -9,8 +9,8 @@
 
 Reelboxed is a small MERN application where **Reviewers** submit star ratings and written reviews against a movie catalog, and an **Admin (Moderator)** curates the catalog and approves or rejects submissions before they go public. Two roles, two end-to-end workflows (review submission and moderation), one deployed application.
 
-- Jira board: `<JIRA BOARD URL>`
-- Figma prototype: `<FIGMA VIEW-ONLY LINK>`
+- Jira board: `[<JIRA BOARD URL>](https://connect-team-ruzzrz7e.atlassian.net/jira/software/projects/MRP/boards/2/backlog)`
+- Figma prototype: `[<FIGMA VIEW-ONLY LINK>](https://www.figma.com/design/1dkj0j3wajfyrTQdDMxpT8/Movie-review?node-id=0-1&t=FDDQhzlEPzPsgCyW-1)`
 
 ## Live deployment
 
