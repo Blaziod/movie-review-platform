@@ -1,8 +1,8 @@
 const Movie = require('../models/Movie');
 const Review = require('../models/Review');
+const MovieComparisonBuilder = require('../builders/MovieComparisonBuilder');
 
 async function getMovieComparison(movie1Id, movie2Id) {
-  // Retrieve both movies concurrently.
   const movies = await Promise.all([
     Movie.findById(movie1Id),
     Movie.findById(movie2Id),
@@ -14,27 +14,20 @@ async function getMovieComparison(movie1Id, movie2Id) {
     throw error;
   }
 
-  // Calculate statistics using approved reviews only.
+  // Build comparison data for each movie.
   const results = await Promise.all(
     movies.map(async (movie) => {
-      const reviews = await Review.find({movieId: movie._id, status: 'Approved',});
-      const approvedReviewCount = reviews.length;
-      const averageRating = approvedReviewCount
-        ? Number(
-            (reviews.reduce((sum, review) => sum + review.rating, 0) / approvedReviewCount).toFixed(2)
-          ): null;
+      const reviews = await Review.find({
+        movieId: movie._id,
+        status: 'Approved',
+      });
 
-      return {
-        id: movie._id,
-        title: movie.title,
-        year: movie.year,
-        genre: movie.genre,
-        synopsis: movie.synopsis,
-        duration: movie.duration,
-        imageUrl: movie.imageUrl,
-        averageRating,
-        approvedReviewCount,
-      };
+      // Builder Pattern: Construct the movie comparison object step by step.
+      // The Builder encapsulates movie details and rating calculations.
+      return new MovieComparisonBuilder()
+        .withMovieDetails(movie)
+        .withReviewStatistics(reviews)
+        .build();
     })
   );
   return { movies: results };

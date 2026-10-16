@@ -24,10 +24,12 @@ describe('GET /api/movies/compare', () => {afterEach(() => {sinon.restore();});
     }));
 
     sinon.stub(Review, 'find').callsFake(async (query) => {
-      expect(query.status).to.equal('Approved');
-      return String(query.movieId) === movieId1
-        ? [{ rating: 4 }, { rating: 5 }]
-        : [];
+    expect(query.status).to.equal('Approved');
+    return String(query.movieId) === movieId1
+        ? [
+            { rating: 4, status: 'Approved' },
+            { rating: 5, status: 'Approved' },
+        ]: [];
     });
 
     const response = await chai.request(app).get(`/api/movies/compare?movie1=${movieId1}&movie2=${movieId2}`);
