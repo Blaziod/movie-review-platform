@@ -1,8 +1,9 @@
 import axios from 'axios';
 
 const axiosInstance = axios.create({
-  // baseURL: 'http://localhost:5001', // local dev
-  baseURL: 'http://3.26.65.198:5001', // EC2 deployment
+  // Create React App inlines REACT_APP_ variables at build time: local development
+  // needs nothing, and production builds (the CI pipeline) set the load balancer address.
+  baseURL: process.env.REACT_APP_API_URL ?? 'http://localhost:5001',
   headers: { 'Content-Type': 'application/json' },
 });
 
