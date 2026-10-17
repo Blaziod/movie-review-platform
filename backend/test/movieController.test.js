@@ -264,7 +264,7 @@ describe('MovieController - getMovieById', () => {
     const reviewQuery = makeReviewQuery([{ rating: 5, status: 'Approved' }]);
     sinon.stub(Review, 'find').returns(reviewQuery);
 
-    const req = { params: { id: 'movie123' } };
+    const req = { params: { id: 'movie123' }, query: {} };
     const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
 
     await getMovieById(req, res);
@@ -278,7 +278,7 @@ describe('MovieController - getMovieById', () => {
     sinon.stub(Movie, 'findById').resolves({ _id: 'movie123', avgRating: 0 });
     sinon.stub(Review, 'find').returns(makeReviewQuery([]));
 
-    const req = { params: { id: 'movie123' } };
+    const req = { params: { id: 'movie123' }, query: {} };
     const res = { status: sinon.stub().returnsThis(), json: sinon.spy() };
 
     await getMovieById(req, res);

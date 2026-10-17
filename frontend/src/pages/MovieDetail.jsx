@@ -23,9 +23,14 @@ const MovieDetail = () => {
   const [formErrors, setFormErrors] = useState({});
   const [success, setSuccess] = useState(false);
 
+  // Review ranking: how the approved reviews are ordered, and which ones this
+  // user has marked helpful during this visit.
+  const [sortBy, setSortBy] = useState('newest');
+  const [votedIds, setVotedIds] = useState({});
+
   const load = () => {
     axiosInstance
-      .get(`/api/movies/${id}`)
+      .get(`/api/movies/${id}`, { params: { sort: sortBy } })
       .then((res) => {
         setMovie(res.data.movie);
         setReviews(res.data.reviews);
@@ -36,7 +41,23 @@ const MovieDetail = () => {
   useEffect(() => {
     load();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [id]);
+  }, [id, sortBy]);
+
+  const toggleHelpful = async (reviewId) => {
+    try {
+      const res = await axiosInstance.post(
+        `/api/reviews/${reviewId}/helpful`,
+        {},
+        { headers: { Authorization: `Bearer ${user?.token}` } }
+      );
+      setReviews((current) =>
+        current.map((r) => (r._id === reviewId ? { ...r, helpfulCount: res.data.helpfulCount } : r))
+      );
+      setVotedIds((current) => ({ ...current, [reviewId]: res.data.voted }));
+    } catch (err) {
+      setError(err.response?.data?.message || 'Could not update your helpful vote.');
+    }
+  };
 
   const handleSubmitReview = async (e) => {
     e.preventDefault();
@@ -101,7 +122,19 @@ const MovieDetail = () => {
 
       <div className="grid md:grid-cols-[2fr_1fr] gap-8">
         <div>
-          <h2 className="font-bold text-white mb-4">Approved Reviews ({reviews.length})</h2>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-bold text-white">Approved Reviews ({reviews.length})</h2>
+            <select
+              value={sortBy}
+              onChange={(e) => setSortBy(e.target.value)}
+              aria-label="Sort reviews"
+              className="px-3 py-1.5 rounded-pill bg-input text-sm text-white border border-transparent focus:outline-none focus:border-brand-orange"
+            >
+              <option value="newest">Newest</option>
+              <option value="highest">Highest rated</option>
+              <option value="helpful">Most helpful</option>
+            </select>
+          </div>
           {reviews.length === 0 ? (
             <p className="text-gray-500">No reviews yet - be the first to review!</p>
           ) : (
@@ -113,6 +146,18 @@ const MovieDetail = () => {
                     <StarRating value={review.rating} readOnly size="text-sm" />
                   </div>
                   <p className="text-sm text-gray-300">{review.text}</p>
+                  <div className="mt-3 flex items-center gap-3 text-xs text-gray-400">
+                    {user && user.role !== 'admin' && review.userId?._id !== user.id ? (
+                      <button
+                        onClick={() => toggleHelpful(review._id)}
+                        className={votedIds[review._id] ? 'text-brand-orange font-semibold' : 'hover:text-white'}
+                      >
+                        {votedIds[review._id] ? 'Marked helpful' : 'Helpful'} ({review.helpfulCount || 0})
+                      </button>
+                    ) : (
+                      <span>{review.helpfulCount || 0} found this helpful</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

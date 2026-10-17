@@ -1,5 +1,6 @@
 const Review = require('../models/Review');
 const Movie = require('../models/Movie');
+const { reviewEvents, REVIEW_MODERATED } = require('../events/reviewEvents');
 
 const MIN_TEXT_LENGTH = 20;
 
@@ -160,6 +161,8 @@ const moderateReview = async (req, res) => {
       review.status = 'Approved';
       await review.save();
       await recalculateMovieRating(review.movieId);
+      // Observer pattern: announce the decision; listeners (e.g. notifications) react.
+      reviewEvents.emit(REVIEW_MODERATED, review);
       return res.json(review);
     }
 
@@ -170,10 +173,47 @@ const moderateReview = async (req, res) => {
       review.status = 'Rejected';
       review.moderationReason = reason.trim();
       await review.save();
+      reviewEvents.emit(REVIEW_MODERATED, review);
       return res.json(review);
     }
 
     return res.status(400).json({ message: "Decision must be 'approve' or 'reject'." });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+// FR (review ranking): a logged-in reviewer can mark an approved review as helpful,
+// or take the mark back. A person cannot vote on their own review, and each person
+// counts at most once. 
+const toggleHelpful = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    if (review.status !== 'Approved') {
+      return res.status(409).json({ message: 'Only approved reviews can be marked helpful.' });
+    }
+    if (review.userId.toString() === req.user.id) {
+      return res.status(403).json({ message: 'You cannot mark your own review as helpful.' });
+    }
+
+    const added = await Review.findOneAndUpdate(
+      { _id: review._id, helpfulVoters: { $ne: req.user.id } },
+      { $addToSet: { helpfulVoters: req.user.id }, $inc: { helpfulCount: 1 } },
+      { new: true }
+    );
+    if (added) {
+      return res.json({ helpfulCount: added.helpfulCount, voted: true });
+    }
+
+    const removed = await Review.findOneAndUpdate(
+      { _id: review._id, helpfulVoters: req.user.id },
+      { $pull: { helpfulVoters: req.user.id }, $inc: { helpfulCount: -1 } },
+      { new: true }
+    );
+    res.json({ helpfulCount: removed.helpfulCount, voted: false });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -186,4 +226,5 @@ module.exports = {
   getMyReviews,
   getPendingReviews,
   moderateReview,
+  toggleHelpful,
 };
