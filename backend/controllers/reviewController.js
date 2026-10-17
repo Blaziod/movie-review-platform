@@ -183,6 +183,42 @@ const moderateReview = async (req, res) => {
   }
 };
 
+// FR (review ranking): a logged-in reviewer can mark an approved review as helpful,
+// or take the mark back. A person cannot vote on their own review, and each person
+// counts at most once. 
+const toggleHelpful = async (req, res) => {
+  try {
+    const review = await Review.findById(req.params.id);
+    if (!review) {
+      return res.status(404).json({ message: 'Review not found' });
+    }
+    if (review.status !== 'Approved') {
+      return res.status(409).json({ message: 'Only approved reviews can be marked helpful.' });
+    }
+    if (review.userId.toString() === req.user.id) {
+      return res.status(403).json({ message: 'You cannot mark your own review as helpful.' });
+    }
+
+    const added = await Review.findOneAndUpdate(
+      { _id: review._id, helpfulVoters: { $ne: req.user.id } },
+      { $addToSet: { helpfulVoters: req.user.id }, $inc: { helpfulCount: 1 } },
+      { new: true }
+    );
+    if (added) {
+      return res.json({ helpfulCount: added.helpfulCount, voted: true });
+    }
+
+    const removed = await Review.findOneAndUpdate(
+      { _id: review._id, helpfulVoters: req.user.id },
+      { $pull: { helpfulVoters: req.user.id }, $inc: { helpfulCount: -1 } },
+      { new: true }
+    );
+    res.json({ helpfulCount: removed.helpfulCount, voted: false });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 module.exports = {
   submitReview,
   updateReview,
@@ -190,4 +226,5 @@ module.exports = {
   getMyReviews,
   getPendingReviews,
   moderateReview,
+  toggleHelpful,
 };

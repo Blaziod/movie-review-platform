@@ -1,5 +1,6 @@
 const Movie = require('../models/Movie');
 const Review = require('../models/Review');
+const { reviewSorter } = require('../ranking/sortStrategies');
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -57,8 +58,10 @@ const getMovieById = async (req, res) => {
       return res.status(404).json({ message: 'Movie not found' });
     }
 
+    // Strategy pattern: ?sort=newest|highest|helpful picks the ordering (default newest).
+    const sortSpec = reviewSorter.choose(req.query.sort).mongoSort();
     const reviews = await Review.find({ movieId: movie._id, status: 'Approved' })
-      .sort({ createdAt: -1 })
+      .sort(sortSpec)
       .populate('userId', 'name');
 
     res.json({ movie, reviews });

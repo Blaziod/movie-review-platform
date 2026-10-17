@@ -6,6 +6,7 @@ const {
   getMyReviews,
   getPendingReviews,
   moderateReview,
+  toggleHelpful,
 } = require('../controllers/reviewController');
 const { protect, requireAdmin } = require('../middleware/authMiddleware');
 const router = express.Router();
@@ -16,5 +17,6 @@ router.get('/pending', protect, requireAdmin, getPendingReviews);
 router.put('/:id', protect, updateReview);
 router.delete('/:id', protect, withdrawReview);
 router.patch('/:id/moderate', protect, requireAdmin, moderateReview);
+router.post('/:id/helpful', protect, toggleHelpful);
 
 module.exports = router;
