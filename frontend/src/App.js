@@ -10,6 +10,7 @@ import ModerationQueue from './pages/ModerationQueue';
 import Catalog from './pages/Catalog';
 import MovieDetail from './pages/MovieDetail';
 import Notifications from './pages/Notifications';
+import MovieComparison from './pages/MovieComparison';
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
       <Navbar />
       <Routes>
         <Route path="/" element={<Catalog />} />
+        <Route path="/movies/compare" element={<MovieComparison />} />
         <Route path="/movies/:id" element={<MovieDetail />} />
         <Route path="/register" element={<Register />} />
         <Route path="/login" element={<Login />} />
