@@ -18,6 +18,7 @@ app.use('/api/notifications', require('./routes/notificationRoutes'));
 // Observer pattern: subscribe the notification handler to review-moderated events.
 registerNotificationListener();
 app.use('/api/health', require('./routes/healthRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Export the app object for testing
 if (require.main === module) {
