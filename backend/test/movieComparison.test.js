@@ -56,4 +56,72 @@ describe('GET /api/movies/compare', () => {afterEach(() => {sinon.restore();});
     const response = await chai.request(app).get(`/api/movies/compare?movie1=${movieId1}&movie2=${movieId2}`);
     expect(response).to.have.status(404);
   });
+
+  it('rejects missing movie IDs', async () => {
+    const response = await chai.request(app)
+      .get('/api/movies/compare');
+
+    expect(response).to.have.status(400);
+    expect(response.body.message).to.be.a('string');
+  });
+
+  it('rejects empty movie IDs', async () => {
+    const response = await chai.request(app)
+      .get('/api/movies/compare?movie1=&movie2=');
+
+    expect(response).to.have.status(400);
+  });
+
+  it('rejects repeated movie IDs in query parameters', async () => {
+    const response = await chai.request(app)
+      .get(`/api/movies/compare?movie1=${movieId1}&movie1=${movieId2}&movie2=${movieId2}`);
+
+    expect(response).to.have.status(400);
+  });
+
+  it('returns 500 without exposing internal errors', async () => {
+    sinon.stub(Movie, 'findById').rejects(new Error('Sensitive database details'));
+
+    const response = await chai.request(app)
+      .get(`/api/movies/compare?movie1=${movieId1}&movie2=${movieId2}`);
+
+    expect(response).to.have.status(500);
+    expect(response.body.message).to.equal('Unable to compare movies.');
+    expect(response.body).to.not.have.property('stack');
+    expect(JSON.stringify(response.body)).to.not.include('Sensitive database details');
+  });
+
+  it('returns a structured validation error', async () => {
+    const response = await chai.request(app)
+      .get('/api/movies/compare?movie1=invalid&movie2=invalid');
+
+    expect(response).to.have.status(400);
+    expect(response.body.message).to.be.a('string');
+    expect(response.body).to.not.have.property('stack');
+  });
+
+  it('handles a valid request after a validation error', async () => {
+    const invalidResponse = await chai.request(app)
+      .get('/api/movies/compare?movie1=invalid&movie2=invalid');
+
+    expect(invalidResponse).to.have.status(400);
+
+    sinon.stub(Movie, 'findById').callsFake(async (id) => ({
+      _id: id,
+      title: 'Test Movie',
+      year: 2024,
+      genre: 'Drama',
+      synopsis: 'Test synopsis',
+      duration: '120 min',
+      imageUrl: '',
+    }));
+
+    sinon.stub(Review, 'find').resolves([]);
+
+    const validResponse = await chai.request(app)
+      .get(`/api/movies/compare?movie1=${movieId1}&movie2=${movieId2}`);
+
+    expect(validResponse).to.have.status(200);
+    expect(validResponse.body.movies).to.have.length(2);
+  });
 });
