@@ -23,6 +23,16 @@ scripts:
 
       \    pm.expect(response.movies).to.be.an(\"array\").with.lengthOf(2);\r
 
+      });\r
+
+      \r
+
+      // MRP-90: Verify movie comparison response time\r
+
+      pm.test(\"Response time is under 2000ms\", function () {\r
+
+      \    pm.expect(pm.response.responseTime).to.be.below(2000);\r
+
       });"
     language: text/javascript
 order: 2000
