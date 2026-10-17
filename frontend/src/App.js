@@ -9,6 +9,7 @@ import MyReviews from './pages/MyReviews';
 import ModerationQueue from './pages/ModerationQueue';
 import Catalog from './pages/Catalog';
 import MovieDetail from './pages/MovieDetail';
+import Notifications from './pages/Notifications';
 
 function App() {
   return (
@@ -24,6 +25,7 @@ function App() {
         <Route path="/admin/manage-movies" element={<ManageMovies />} />
         <Route path="/admin/moderation-queue" element={<ModerationQueue />} />
         <Route path="/my-reviews" element={<MyReviews />} />
+        <Route path="/notifications" element={<Notifications />} />
         <Route path="*" element={<Navigate to="/" replace />} />
       </Routes>
     </Router>

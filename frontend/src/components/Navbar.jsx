@@ -1,5 +1,7 @@
-import { Link, useNavigate } from 'react-router-dom';
+import { useEffect, useState } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
+import axiosInstance from '../axiosConfig';
 import HeaderLogo from './HeaderLogo';
 import Button from './Button';
 
@@ -8,6 +10,20 @@ const NAV_LINK = 'text-xs font-semibold uppercase tracking-wider text-[#808080] 
 const Navbar = () => {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+  const [unreadCount, setUnreadCount] = useState(0);
+
+  // Refresh the unread badge whenever the reviewer logs in or moves to another page.
+  useEffect(() => {
+    if (!user || user.role === 'admin') {
+      setUnreadCount(0);
+      return;
+    }
+    axiosInstance
+      .get('/api/notifications', { headers: { Authorization: `Bearer ${user.token}` } })
+      .then((res) => setUnreadCount(res.data.unreadCount))
+      .catch(() => setUnreadCount(0));
+  }, [user, location.pathname]);
 
   const handleLogout = () => {
     logout();
@@ -35,9 +51,19 @@ const Navbar = () => {
             </>
           )}
           {user && user.role !== 'admin' && (
-            <Link to="/my-reviews" className={NAV_LINK}>
-              My Reviews
-            </Link>
+            <>
+              <Link to="/my-reviews" className={NAV_LINK}>
+                My Reviews
+              </Link>
+              <Link to="/notifications" className={`${NAV_LINK} flex items-center gap-2`}>
+                Notifications
+                {unreadCount > 0 && (
+                  <span className="bg-brand-orange text-bg rounded-pill px-2 py-0.5 text-[10px] font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </Link>
+            </>
           )}
           {user ? (
             <>

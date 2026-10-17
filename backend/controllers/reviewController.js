@@ -1,5 +1,6 @@
 const Review = require('../models/Review');
 const Movie = require('../models/Movie');
+const { reviewEvents, REVIEW_MODERATED } = require('../events/reviewEvents');
 
 const MIN_TEXT_LENGTH = 20;
 
@@ -160,6 +161,8 @@ const moderateReview = async (req, res) => {
       review.status = 'Approved';
       await review.save();
       await recalculateMovieRating(review.movieId);
+      // Observer pattern: announce the decision; listeners (e.g. notifications) react.
+      reviewEvents.emit(REVIEW_MODERATED, review);
       return res.json(review);
     }
 
@@ -170,6 +173,7 @@ const moderateReview = async (req, res) => {
       review.status = 'Rejected';
       review.moderationReason = reason.trim();
       await review.save();
+      reviewEvents.emit(REVIEW_MODERATED, review);
       return res.json(review);
     }
 
