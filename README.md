@@ -82,11 +82,7 @@ JWT_SECRET=<a long random secret>
 PORT=5001
 ```
 
-In `frontend/src/axiosConfig.jsx`, make sure the local dev line is the active `baseURL`:
-
-```js
-baseURL: 'http://localhost:5001', 
-```
+The frontend calls the API at `REACT_APP_API_URL` (see `frontend/.env.example`). Leave it unset for local development; it defaults to `http://localhost:5001`.
 
 Run both servers together from the project root:
 
@@ -133,7 +129,7 @@ Manually deployed to a single AWS EC2 instance (`i-008a6f4ba4da70da6`), followin
 1. SSH into the instance and install Node.js, git, and PM2.
 2. `git clone` this repository onto the instance.
 3. Set `backend/.env` with the production `MONGO_URI` and `JWT_SECRET`, then run the backend persistently with `pm2 start server.js --name mrp-backend`.
-4. Build the frontend locally with `axiosConfig.jsx`'s `baseURL` pointed at the instance's public IP, then copy the `build/` folder to the instance and serve it with `pm2 start "serve -s build -l 3000" --name mrp-frontend`.
+4. Build the frontend with `REACT_APP_API_URL` set to the backend's address (it is inlined at build time), then copy the `build/` folder to the instance and serve it with `pm2 start "serve -s build -l 3000" --name mrp-frontend`.
 5. Open inbound ports `3000` (frontend) and `5001` (backend) in the instance's security group.
 
 Redeploying after a code change is manual (no CI/CD pipeline): pull/copy the updated files, then `pm2 restart mrp-backend` (backend) or rebuild + re-copy `build/` (frontend) — PM2 does not hot-reload code changes on its own.
