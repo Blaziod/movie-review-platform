@@ -1,0 +1,15 @@
+id: 01a14a88-d4d4-7793-8d6a-e6557c221d0d
+version: 1
+name: MRP-86 Backend Failure Mock
+slug: new-mock-7c1fe
+enableSession: true
+protocol: http
+port: 4500
+autoRestartOnChange: true
+logging:
+  level: verbose
+  showBody: true
+scenarios:
+  - name: default
+    path: ./default.js
+    default: true
