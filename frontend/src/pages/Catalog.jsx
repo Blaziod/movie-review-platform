@@ -75,6 +75,16 @@ const Catalog = () => {
         </form>
       </div>
 
+      {/* MRP-85: Navigate to the Movie Comparison page */}
+      <div className="mb-8">
+        <Link
+          to="/movies/compare"
+          className="inline-block px-6 py-3 rounded-pill bg-brand-orange text-bg font-semibold hover:bg-brand-orange-dark"
+        >
+          Compare Movies
+        </Link>
+      </div>
+      
       {error && (
         <div className="mb-4 px-4 py-2 text-sm text-danger bg-danger-bg rounded-xl">{error}</div>
       )}
