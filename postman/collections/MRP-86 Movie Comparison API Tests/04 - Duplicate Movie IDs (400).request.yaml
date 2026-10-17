@@ -1,0 +1,32 @@
+$kind: http-request
+description: ""
+url: http://localhost:5001/api/movies/compare?movie1=6ad2105a657cf718d766c6fd&movie2=6ad2105a657cf718d766c6fd
+method: GET
+queryParams:
+  movie1: 6ad2105a657cf718d766c6fd
+  movie2: 6ad2105a657cf718d766c6fd
+scripts:
+  - type: afterResponse
+    code: "// MRP-86: Reject comparison of the same movie\r
+
+      pm.test(\"Status code is 400\", function () {\r
+
+      \    pm.response.to.have.status(400);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Returns validation error for duplicate movies\", function () {\r
+
+      \    const response = pm.response.json();\r
+
+      \r
+
+      \    pm.expect(response.message).to.be.a(\"string\").that.is.not.empty;\r
+
+      \    pm.expect(response).to.not.have.property(\"stack\");\r
+
+      });"
+    language: text/javascript
+order: 4000

@@ -1,0 +1,36 @@
+$kind: http-request
+description: ""
+url: http://localhost:5001/api/movies/compare?movie1=507f1f77bcf86cd799439011&movie2=6ad2105a657cf718d766c6fa
+method: GET
+queryParams:
+  movie1: 507f1f77bcf86cd799439011
+  movie2: 6ad2105a657cf718d766c6fa
+scripts:
+  - type: afterResponse
+    code: "// MRP-86: Verify nonexistent movie returns 404\r
+
+      pm.test(\"Status code is 404\", function () {\r
+
+      \    pm.response.to.have.status(404);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Returns movie not found message\", function () {\r
+
+      \    const response = pm.response.json();\r
+
+      \r
+
+      \    pm.expect(response.message).to.equal(\r
+
+      \        \"One or both movies were not found.\"\r
+
+      \    );\r
+
+      \    pm.expect(response).to.not.have.property(\"stack\");\r
+
+      });"
+    language: text/javascript
+order: 5614

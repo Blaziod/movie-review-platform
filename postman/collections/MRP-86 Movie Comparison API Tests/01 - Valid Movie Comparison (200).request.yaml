@@ -1,0 +1,28 @@
+$kind: http-request
+description: ""
+url: http://localhost:5001/api/movies/compare?movie1=6ad2105a657cf718d766c6fd&movie2=6ad2105a657cf718d766c6fa
+method: GET
+queryParams:
+  movie1: 6ad2105a657cf718d766c6fd
+  movie2: 6ad2105a657cf718d766c6fa
+scripts:
+  - type: afterResponse
+    code: "// MRP-86: Verify successful movie comparison\r
+
+      pm.test(\"Status code is 200\", function () {\r
+
+      \    pm.response.to.have.status(200);\r
+
+      });\r
+
+      \r
+
+      pm.test(\"Response contains two movies\", function () {\r
+
+      \    const response = pm.response.json();\r
+
+      \    pm.expect(response.movies).to.be.an(\"array\").with.lengthOf(2);\r
+
+      });"
+    language: text/javascript
+order: 2000
