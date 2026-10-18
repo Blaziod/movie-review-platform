@@ -14,14 +14,15 @@ app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/movies', require('./routes/movieRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
-
-// Observer pattern: subscribe the notification handler to review-moderated events.
-registerNotificationListener();
 app.use('/api/health', require('./routes/healthRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 
 // Export the app object for testing
 if (require.main === module) {
+  // Observer pattern: subscribe the notification handler to review-moderated events.
+  // Only when the server really starts, so importing the app in tests does not
+  // attach the real listener to the shared event emitter.
+  registerNotificationListener();
   connectDB();
   const PORT = process.env.PORT || 5001;
   app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
