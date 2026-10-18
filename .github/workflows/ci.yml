@@ -49,7 +49,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        server: [server1]   
+        # One deploy job per server, in parallel. Each runs on that server's own
+        # self-hosted runner (label server1 / server2) and sets INSTANCE_NAME to match,
+        # so GET /api/health shows which server answered behind the load balancer.
+        server: [server1, server2]
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
