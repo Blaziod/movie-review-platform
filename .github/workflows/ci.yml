@@ -1,0 +1,104 @@
+name: CI/CD
+
+# Pull requests only run the tests. A push to main also deploys to the EC2 servers.
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  test:
+    name: Run Tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci
+
+      - name: Run backend tests
+        working-directory: backend
+        run: npm test
+
+      # npm install, not npm ci: the committed frontend/package-lock.json is out of sync
+      # with package.json (it pins typescript 7, the project needs 4.9), so npm ci refuses it.
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+
+      - name: Build frontend (compile check)
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: ""
+        run: npm run build
+
+  deploy:
+    name: Deploy to ${{ matrix.server }}
+    needs: test
+    if: github.event_name != 'pull_request'
+    runs-on: [self-hosted, "${{ matrix.server }}"]
+    strategy:
+      fail-fast: false
+      matrix:
+        server: [server1]   
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Install backend dependencies
+        working-directory: backend
+        run: npm ci --omit=dev
+
+      # npm install, not npm ci: the committed frontend/package-lock.json is out of sync
+      # with package.json (it pins typescript 7, the project needs 4.9), so npm ci refuses it.
+      - name: Install frontend dependencies
+        working-directory: frontend
+        run: npm install --no-audit --no-fund
+
+      - name: Build frontend
+        working-directory: frontend
+        env:
+          REACT_APP_API_URL: ""
+        run: npm run build
+
+      - name: Write production environment file
+        env:
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          INSTANCE_NAME: ${{ matrix.server }}
+        run: |
+          umask 077
+          printf 'MONGO_URI=%s\nJWT_SECRET=%s\nPORT=5001\nINSTANCE_NAME=%s\n' "$MONGO_URI" "$JWT_SECRET" "$INSTANCE_NAME" > backend/.env
+
+      # Run from backend/ so PM2 uses it as the app's working directory: dotenv reads
+      # .env from the current directory, and the .env above is written into backend/.
+      - name: Restart the app with PM2
+        working-directory: backend
+        run: |
+          pm2 delete mrp-backend mrp-frontend 2>/dev/null || true
+          if pm2 describe mrp-app > /dev/null 2>&1; then
+            pm2 restart mrp-app --update-env
+          else
+            pm2 start server.js --name mrp-app
+          fi
+          pm2 save
+          pm2 status
+
+      - name: Check the app is healthy
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            echo "Health check attempt $attempt"
+            if curl -fsS http://localhost:5001/api/health; then echo; exit 0; fi
+            sleep 3
+          done
+          echo "Health check failed"
+          exit 1

@@ -1,6 +1,8 @@
 const express = require('express');
 const dotenv = require('dotenv');
 const cors = require('cors');
+const path = require('path');
+const fs = require('fs');
 const connectDB = require('./config/db');
 const { registerNotificationListener } = require('./events/notificationListener');
 
@@ -16,6 +18,13 @@ app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/notifications', require('./routes/notificationRoutes'));
 app.use('/api/health', require('./routes/healthRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
+
+const buildPath = path.join(__dirname, '..', 'frontend', 'build');
+if (fs.existsSync(buildPath)) {
+  app.use(express.static(buildPath));
+  // Any non-API route returns the React app, so React Router works on page refresh.
+  app.get(/^\/(?!api).*/, (req, res) => res.sendFile(path.join(buildPath, 'index.html')));
+}
 
 // Export the app object for testing
 if (require.main === module) {
