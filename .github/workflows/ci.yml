@@ -79,13 +79,16 @@ jobs:
           umask 077
           printf 'MONGO_URI=%s\nJWT_SECRET=%s\nPORT=5001\nINSTANCE_NAME=%s\n' "$MONGO_URI" "$JWT_SECRET" "$INSTANCE_NAME" > backend/.env
 
+      # Run from backend/ so PM2 uses it as the app's working directory: dotenv reads
+      # .env from the current directory, and the .env above is written into backend/.
       - name: Restart the app with PM2
+        working-directory: backend
         run: |
           pm2 delete mrp-backend mrp-frontend 2>/dev/null || true
           if pm2 describe mrp-app > /dev/null 2>&1; then
             pm2 restart mrp-app --update-env
           else
-            pm2 start backend/server.js --name mrp-app
+            pm2 start server.js --name mrp-app
           fi
           pm2 save
           pm2 status
