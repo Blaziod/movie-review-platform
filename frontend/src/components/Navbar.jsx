@@ -40,6 +40,10 @@ const Navbar = () => {
           <Link to="/" className={NAV_LINK}>
             Movies
           </Link>
+
+          <Link to="/movies/compare" className={NAV_LINK}>
+            Compare Movies
+          </Link>
           {user?.role === 'admin' && (
             <>
               <Link to="/admin/manage-movies" className={NAV_LINK}>
